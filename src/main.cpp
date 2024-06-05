@@ -1,6 +1,6 @@
-#include <iostream>
+#include "Pman.hpp"
 
-int main(const int argc, char** argv)
+int main(int argc, char** argv)
 {
-    std::cout << "Hello world" << std::endl;
+    Pman p(argc, const_cast<const char**>(argv));
 }
