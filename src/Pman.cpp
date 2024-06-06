@@ -3,8 +3,9 @@
 #include <iostream>
 #include <cstdlib>
 #include <filesystem>
+#include <exception>
 
-const std::string program_name = "pman";
+#include "print_err.hpp"
 
 Pman::Pman(int argc, char** argv)
 {
@@ -12,18 +13,22 @@ Pman::Pman(int argc, char** argv)
     m_cmds.push_back(Cmd { .id = "list", .s = "l", .l = "list", .usage = "List passwords", .params = "" });
 
     char* HOME = std::getenv("HOME");
+    if (HOME == nullptr) {
+        print_err("HOME environment variable not set");
+        std::terminate();
+    }
 
-    m_HOME = HOME != NULL ? std::filesystem::path(HOME) : std::filesystem::path("");
+    m_HOME = HOME != nullptr ? std::filesystem::path(HOME) : std::filesystem::path("");
 
     m_config_path = m_HOME;
-    m_config_path /= "config";
-    m_config_path /= program_name;
-    std::filesystem::create_directory(m_config_path);
-
+    m_config_path /= ".config";
+    m_config_path /= m_program_name;
+    
     m_passwords_path = m_config_path;
     m_passwords_path /= "passwords";
-    std::filesystem::create_directory(m_passwords_path);
 
+    Pman::mkconfig();
+    
     m_argc = argc;
     m_argv = argv;
     m_has_subcmd = false;
@@ -86,6 +91,24 @@ bool Pman::subcommand_is(std::string id) const
     return m_subcmd_id == id;
 }
 
+void Pman::mkconfig() const
+{
+    if (!std::filesystem::exists(m_HOME)) {
+        print_err("Home directory not found, creating");
+        std::filesystem::create_directory(m_config_path);
+    }
+
+    if (!std::filesystem::exists(m_config_path)) {
+        print_err("Config directory not found, creating");
+        std::filesystem::create_directory(m_config_path);
+    }
+
+    if (!std::filesystem::exists(m_passwords_path)) {
+        print_err("Passwords directory not found, creating");
+        std::filesystem::create_directory(m_passwords_path);
+    }
+}
+
 int Pman::subcmd_help()
 {
     std::cerr << "Usage:" << std::endl;
@@ -112,7 +135,7 @@ int Pman::exec()
     Pman::parse();
 
     if (!Pman::has_subcmd()) {
-        std::cerr << "Error: No valid subcommand provided" << std::endl;
+        print_err("No valid subcommand provided");
         return Pman::subcmd_help();
     }
 

@@ -19,7 +19,9 @@ private:
     bool subcommand_is(std::string id) const;
     void print_subcmd() const;
     void print_args() const;
+    void mkconfig() const;
     void parse();
+    
     int subcmd_help();
     int subcmd_list();
 
@@ -36,4 +38,6 @@ private:
     std::string m_subcmd_id;
     std::vector<std::string> m_args;
     std::vector<Cmd> m_cmds;
+
+    const std::string m_program_name = "pman";
 };
